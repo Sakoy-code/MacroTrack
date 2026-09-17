@@ -1,0 +1,47 @@
+name: Build MacroTrack APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Installer le SDK Android
+        uses: android-actions/setup-android@v3
+
+      - name: Installer les paquets SDK necessaires
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Preparer Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Compiler l'APK debug
+        env:
+          # Va dans Settings > Secrets and variables > Actions de ton repo GitHub
+          # et cree un secret nomme GEMINI_API_KEY avec ta cle Google AI Studio.
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: Publier l'APK compile
+        uses: actions/upload-artifact@v4
+        with:
+          name: macrotrack-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
