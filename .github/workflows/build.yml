@@ -19,25 +19,16 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Build avec Gradle
-        run: ./gradlew assembleDebug
-
-      - name: Installer les paquets SDK necessaires
-        run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-
       - name: Preparer Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.9"
+
+      - name: Rendre gradlew executable
+        run: chmod +x gradlew
 
       - name: Compiler l'APK debug
         env:
-          # Va dans Settings > Secrets and variables > Actions de ton repo GitHub
-          # et cree un secret nomme GEMINI_API_KEY avec ta cle Google AI Studio.
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Publier l'APK compile
         uses: actions/upload-artifact@v4
